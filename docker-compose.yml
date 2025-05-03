@@ -1,32 +1,15 @@
-version: "3"
 services:
-  postgreshw08:
-    image: postgres:12-alpine
-    container_name: postgreshw08
+  db:
+    image: postgres:14
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 567234
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
-      interval: 30s
-      timeout: 60s
-      retries: 5
-      start_period: 80s
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hw7
     ports:
-      - '5432:5432'
+      - "5432:5432"
+
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
-  apphw08:
-    build: .
-    command: /bin/sh -c 'alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload'
-    environment:
-      DB_HOST: postgreshw08
-      PORT: 8000
-    ports: 
-      - '8000:8000'
-    depends_on:
-      postgreshw08:
-        condition: service_healthy
-    volumes:
-      - .:/code
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,43 +1,25 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-import os
-from pydantic import ValidationError
+"""
+Main application module for Contacts API.
+"""
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from app.api.router import api_router
+from app.core.config import API_V1_PREFIX, PROJECT_NAME
 
-from src.api.contacts import routerContacts
-from src.api.utils import routerUtils
+# Create FastAPI app instance
+app = FastAPI(title=PROJECT_NAME)
 
-app = FastAPI()
+# Include API router
+app.include_router(api_router, prefix=API_V1_PREFIX)
 
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(_: Request, exc: ValidationError):
-    return JSONResponse(
-        status_code=400,
-        content={
-            "detail": exc.errors(),
-        },
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(_: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": str(exc),
-        },
-    )
-
-app.include_router(routerUtils, prefix="/api")
-app.include_router(routerContacts, prefix="/api")
+# Root endpoint
+@app.get("/", response_class=RedirectResponse, status_code=302)
+def read_root():
+    """
+    Root endpoint that redirects to API documentation.
+    """
+    return "/docs"
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
-        reload=True,
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
